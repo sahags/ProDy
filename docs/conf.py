@@ -100,9 +100,7 @@ intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
 }
-html_additional_pages = {
-    "smart_search": "smart_search.html",
-}
+
 if os.environ.get("READTHEDOCS") == "True":
     import subprocess
     try:
