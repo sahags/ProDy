@@ -34,7 +34,7 @@ def main():
             if name.startswith("_"):
                 continue
             if inspect.isfunction(obj) and getattr(obj, "__module__", "") == modname:
-                index.setdefault(name, f"{modname}.{name}")
+                index.setdefault(name,[]). append(f"{modname}.{name}")
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as f:
