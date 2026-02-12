@@ -17,7 +17,6 @@ ProDy Manual
 
 .. toctree::
    :maxdepth: 2
-   :glob:
 
    smart_search
    getprody
