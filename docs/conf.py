@@ -103,4 +103,7 @@ intersphinx_mapping = {
 
 if os.environ.get("READTHEDOCS") == "True":
     import subprocess
-    subprocess.check_call([sys.executable, "tools/build_api_index.py"], cwd=os.path.dirname(__file__))
+    try:
+        subprocess.check_call([sys.executable, "tools/build_api_index.py"], cwd=os.path.dirname(__file__))
+    except Exception as e:
+        print("WARNING: API index generation failed:", e)
