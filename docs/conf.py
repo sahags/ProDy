@@ -101,6 +101,14 @@ intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/stable/', None),
 }
 
+html_static_path = ["_static"]
+html_js_files = [
+    "smart_search.js",
+]
+html_css_files = [
+    "smart_search.css",
+]
+
 if os.environ.get("READTHEDOCS") == "True":
     import subprocess
     try:
