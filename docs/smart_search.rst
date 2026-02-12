@@ -1,77 +1,64 @@
-Smart Search
-===========
+<script>
+(function () {
+  const statusEl = document.getElementById("smartSearchStatus");
+  const form = document.getElementById("smartSearchForm");
+  const input = document.getElementById("smartSearchInput");
 
-.. raw:: html
+  const basePath = window.location.pathname.split("/").slice(0,3).join("/");
+  const docsBase = basePath || "";
+  const indexUrl = docsBase + "/_static/api_index.json";
 
-   <div style="max-width: 700px;">
-     <p>Type an exact function name (e.g., <code>parsePDB</code>) to jump directly to its docs.
-     Otherwise you'll be taken to full search results.</p>
+  let apiIndex = null;
 
-     <form id="smartSearchForm">
-       <input id="smartSearchInput" style="width: 100%; padding: 10px; font-size: 16px;"
-              placeholder="Search (e.g., parsePDB or parse)" />
-       <button type="submit" style="margin-top: 10px; padding: 8px 12px;">Search</button>
-     </form>
+  async function loadIndex() {
+    if (apiIndex) return apiIndex;
+    const res = await fetch(indexUrl, { cache: "force-cache" });
+    if (!res.ok) throw new Error("Failed to load api_index.json");
+    apiIndex = await res.json();
+    return apiIndex;
+  }
 
-     <p id="smartSearchStatus" style="margin-top: 10px; opacity: 0.8;"></p>
-   </div>
+  function toModulePage(dotted) {
+    const parts = dotted.split(".");
+    const moduleParts = parts.slice(1, -1);
+    const htmlPath = "reference/" + moduleParts.join("/") + ".html";
+    return docsBase + "/" + htmlPath + "#" + dotted;
+  }
 
-.. raw:: html
+  function pickBestTarget(name, dottedList) {
+    // Prefer the canonical ProDy API location if present
+    const preferredPrefix = "prody.proteins.pdbfile." + name;
+    const exactPreferred = dottedList.find(d => d === preferredPrefix);
+    if (exactPreferred) return exactPreferred;
 
-   <script>
-   (function () {
-     const statusEl = document.getElementById("smartSearchStatus");
-     const form = document.getElementById("smartSearchForm");
-     const input = document.getElementById("smartSearchInput");
+    // Otherwise, prefer shortest dotted path (usually the core API, not database helpers)
+    dottedList.sort((a, b) => a.length - b.length);
+    return dottedList[0];
+  }
 
-     // Works on RTD under /en/latest/ etc
-     const basePath = window.location.pathname.split("/").slice(0,3).join("/");
-     // Example: /en/latest
-     const docsBase = basePath || "";
-     const indexUrl = docsBase + "/_static/api_index.json";
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const q = (input.value || "").trim();
+    if (!q) return;
 
-     let apiIndex = null;
+    try {
+      const idx = await loadIndex();
 
-     async function loadIndex() {
-       if (apiIndex) return apiIndex;
-       statusEl.textContent = "Loading API index…";
-       const res = await fetch(indexUrl, { cache: "force-cache" });
-       if (!res.ok) throw new Error("Failed to load api_index.json");
-       apiIndex = await res.json();
-       statusEl.textContent = "";
-       return apiIndex;
-     }
+      // exact-name match only:
+      const dottedList = idx[q];  // list of dotted paths, or undefined
 
-     function toModulePage(dotted) {
-       // dotted: prody.proteins.pdbfile.parsePDB
-       const parts = dotted.split(".");
-       const moduleParts = parts.slice(1, -1); // proteins/pdbfile
-       const htmlPath = "reference/" + moduleParts.join("/") + ".html";
-       return docsBase + "/" + htmlPath + "#" + dotted;
-     }
+      if (Array.isArray(dottedList) && dottedList.length > 0) {
+        const target = pickBestTarget(q, dottedList);
+        window.location.href = toModulePage(target);
+        return;
+      }
 
-     form.addEventListener("submit", async (e) => {
-       e.preventDefault();
-       const q = (input.value || "").trim();
-       if (!q) return;
+      // no exact match => normal RTD search results
+      window.location.href = docsBase + "/search.html?q=" + encodeURIComponent(q);
+    } catch (err) {
+      window.location.href = docsBase + "/search.html?q=" + encodeURIComponent(q);
+    }
+  });
 
-       try {
-         const idx = await loadIndex();
-         // exact match (case-sensitive). If you want case-insensitive, tell me.
-         const dotted = idx[q];
-
-         if (dotted) {
-           window.location.href = toModulePage(dotted);
-         } else {
-           window.location.href = docsBase + "/search.html?q=" + encodeURIComponent(q);
-         }
-       } catch (err) {
-         // fallback
-         window.location.href = docsBase + "/search.html?q=" + encodeURIComponent(q);
-       }
-     });
-
-     // Load index early for faster response
-     loadIndex().catch(() => {});
-   })();
-   </script>
+})();
+</script>
