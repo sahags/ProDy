@@ -8,19 +8,26 @@ import prody
 
 OUT = os.path.join(os.path.dirname(__file__), "..", "_static", "api_index.json")
 
+SKIP_PREFIXES = (
+    "prody.tests",   # <- prevents your exact crash
+)
+
 def iter_modules(pkg):
     prefix = pkg.__name__ + "."
     for m in pkgutil.walk_packages(pkg.__path__, prefix):
-        yield m.name
+        name = m.name
+        if name.startswith(SKIP_PREFIXES):
+            continue
+        yield name
 
 def main():
-    # Store: function_name -> dotted_path (for anchors)
     index = {}
 
     for modname in iter_modules(prody):
         try:
             mod = importlib.import_module(modname)
         except Exception:
+            # ignore anything that can't be imported on RTD
             continue
 
         for name, obj in vars(mod).items():
@@ -37,4 +44,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
