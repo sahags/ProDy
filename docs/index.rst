@@ -19,6 +19,7 @@ ProDy Manual
    :maxdepth: 2
    :glob:
 
+   smart_search
    getprody
    apps/index
    reference/index
