@@ -100,3 +100,7 @@ intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
 }
+
+if os.environ.get("READTHEDOCS") == "True":
+    import subprocess
+    subprocess.check_call([sys.executable, "tools/build_api_index.py"], cwd=os.path.dirname(__file__))
